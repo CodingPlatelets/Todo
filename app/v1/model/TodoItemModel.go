@@ -76,12 +76,18 @@ func (model *TodoItem) GetUserTodoItem(item TodoItem) helper.ReturnType {
 	return helper.ReturnType{Status: constants.CodeSuccess, Msg: "查询成功", Data: todoList}
 }
 
-func (model *TodoItem) UpdateTodoItem(todoItem TodoItem) helper.ReturnType {
+func (model *TodoItem) UpdateTodoItem(todoItem TodoItem, updatesMap map[string]interface{}) helper.ReturnType {
+	log.Println(updatesMap)
+	var seletString []string
+	for k := range updatesMap {
+		seletString = append(seletString, k)
+	}
+	log.Println(seletString)
 	err := db.
 		Model(&TodoItem{}).
-		Select([]string{"todo_id", "todo_content", "todo_group_id", "todo_title", "is_finished"}).
+		Select(seletString).
 		Where("todo_id = ?", todoItem.TodoID).
-		Updates(todoItem).
+		Updates(updatesMap).
 		Error
 	if err != nil {
 		return helper.ReturnType{Status: constants.CodeError, Msg: "更新失败", Data: err.Error()}

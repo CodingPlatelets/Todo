@@ -5,6 +5,7 @@ import (
 	"Todo/app/v1/model"
 	"Todo/constants"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -69,9 +70,9 @@ func GetUsersTodoList(c *gin.Context) {
 
 	res := todoModel.GetUserTodoItem(todoJson)
 	c.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"msg" : "OK",
-		"todo_list" : res.Data,
+		"code":      200,
+		"msg":       "OK",
+		"todo_list": res.Data,
 	})
 	return
 }
@@ -84,14 +85,13 @@ func UpdateTodoItem(c *gin.Context) {
 		c.JSON(http.StatusOK, helper.ApiReturn(constants.CodeError, err.Error()))
 		return
 	}
+	body, _ := ioutil.ReadAll(c.Request.Body)
 
-	if err := c.ShouldBindJSON(&todoJson); err != nil {
-		c.JSON(http.StatusOK, helper.ApiReturn(constants.CodeError, err.Error()))
-		return
-	}
+	updateJson, _ := helper.JsonToMap(string(body))
+	log.Println(updateJson)
 
 	todoJson.TodoID = TodoID
-	res := todoModel.UpdateTodoItem(todoJson)
+	res := todoModel.UpdateTodoItem(todoJson, updateJson)
 	c.JSON(http.StatusOK, helper.ApiReturn(res.Status, res.Msg))
 	return
 }
