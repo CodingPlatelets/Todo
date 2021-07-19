@@ -7,6 +7,7 @@ import (
 
 type User struct {
 	UserID   int    `gorm:"primaryKey;int;user_id" json:"user_id"`
+	Email    string `gorm:"email" json:"email"`
 	Username string `gorm:"username" json:"username"`
 	Password string `gorm:"password" json:"password"`
 }
