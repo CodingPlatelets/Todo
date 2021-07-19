@@ -11,10 +11,10 @@ type TodoItem struct {
 	TodoID      int       `gorm:"primaryKey;todo_id" json:"todo_id" uri:"todo_id"`
 	UserID      int       `gorm:"user_id" json:"user_id"`
 	TodoGroupID int       `json:"todo_group_id" gorm:"todo_group_id"`
-	TodoTitle   string    `json:"todo_title" gorm:"todo_title"`
-	TodoContent string    `json:"todo_content" gorm:"todo_content"`
+	TodoTitle   string    `json:"todo_title" gorm:"todo_title;omitempty"`
+	TodoContent string    `json:"todo_content" gorm:"todo_content;omitempty"`
 	CreateAt    time.Time `json:"create_at" gorm:"create_at;autoCreateTime"`
-	IsFinished  bool      `json:"is_finished" gorm:"is_finished"`
+	IsFinished  bool      `json:"is_finished" gorm:"is_finished;omitempty"`
 	User        User      `gorm:"foreignKey:UserID"`
 	TodoGroup   TodoGroup `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:TodoGroupID"`
 }
@@ -55,10 +55,20 @@ func (model *TodoItem) GetTodoItemByID(TodoID int) helper.ReturnType {
 
 func (model *TodoItem) GetUserTodoItem(item TodoItem) helper.ReturnType {
 	// err := db.Select([]string{"content", ""})
-	var todoList []TodoItem
+	type result struct {
+		TodoID      int       `gorm:"primaryKey;todo_id" json:"todo_id" uri:"todo_id"`
+		UserID      int       `gorm:"user_id" json:"user_id"`
+		TodoGroupID int       `json:"todo_group_id" gorm:"todo_group_id"`
+		TodoTitle   string    `json:"todo_title" gorm:"todo_title"`
+		TodoContent string    `json:"todo_content" gorm:"todo_content"`
+		CreateAt    time.Time `json:"create_at" gorm:"create_at"`
+		IsFinished  bool      `json:"is_finished" gorm:"is_finished"`
+	}
+	var todoList []result
 	err := db.
+		Model(&TodoItem{}).
 		Where("user_id = ?", item.UserID).
-		Find(&todoList).
+		Scan(&todoList).
 		Error
 	if err != nil {
 		return helper.ReturnType{Status: constants.CodeError, Msg: "查询失败", Data: err.Error()}
