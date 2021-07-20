@@ -77,12 +77,39 @@ func (model *TodoItem) GetUserTodoItem(item TodoItem) helper.ReturnType {
 }
 
 func (model *TodoItem) UpdateTodoItem(todoItem TodoItem, updatesMap map[string]interface{}) helper.ReturnType {
-	log.Println(updatesMap)
 	var seletString []string
+	var HaveUpdateTodoGroup bool
+	HaveUpdateTodoGroup = false
 	for k := range updatesMap {
+		if k == "todo_group_id" {
+			HaveUpdateTodoGroup = true
+		}
 		seletString = append(seletString, k)
 	}
-	log.Println(seletString)
+
+	if HaveUpdateTodoGroup {
+		var todoItemInfo TodoItem
+		err := db.Model(&TodoItem{}).Where("todo_id = ?", todoItem.TodoID).Find(&todoItemInfo).Error
+		if err != nil {
+			log.Println(err.Error())
+		}
+		var todoGroupOriginal TodoGroup
+		var todoGroupAfter TodoGroup
+		todoGorupModel := TodoGroup{}
+		log.Println(updatesMap["todo_group_id"])
+		err = db.Model(&TodoGroup{}).Where("todo_group_id = ?", todoItemInfo.TodoGroupID).Find(&todoGroupOriginal).Error
+		err = db.Model(&TodoGroup{}).Where("todo_group_id = ?", updatesMap["todo_group_id"]).Find(&todoGroupAfter).Error
+
+		if todoGroupAfter.TodoGroupID != todoGroupOriginal.TodoGroupID {
+			todoGroupOriginal.ItemCount -= 1
+			todoGroupAfter.ItemCount += 1
+			log.Println(todoGroupAfter)
+			log.Println(todoGroupOriginal)
+			todoGorupModel.UpdateTodoGroup(todoGroupAfter)
+			todoGorupModel.UpdateTodoGroup(todoGroupOriginal)
+		}
+	}
+
 	err := db.
 		Model(&TodoItem{}).
 		Select(seletString).

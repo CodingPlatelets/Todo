@@ -3,7 +3,6 @@ package controller
 import (
 	"Todo/app/helper"
 	"Todo/app/v1/model"
-	"Todo/constants"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -32,7 +31,7 @@ func GetAllTodoGroup(c *gin.Context) {
 
 	res := todoGroupModel.GetAllTodoGroups(todoGroupJson)
 	c.JSON(http.StatusOK, gin.H{
-		"code": 200,
+		"code": http.StatusOK,
 		"msg":  "OK",
 		"todo_group_list": res.Data,
 	})
@@ -49,7 +48,7 @@ func UpdateTodoGroup(c *gin.Context) {
 	}
 
 	if err = c.ShouldBindJSON(&todoGroupJson); err != nil {
-		c.JSON(http.StatusOK, helper.ApiReturn(constants.CodeError, err.Error()))
+		c.JSON(http.StatusOK, helper.ApiReturn(http.StatusBadRequest, err.Error()))
 		return
 	}
 
