@@ -53,8 +53,7 @@ func (model *TodoItem) GetTodoItemByID(TodoID int) helper.ReturnType {
 	return helper.ReturnType{Status: constants.CodeSuccess, Msg: "查询成功", Data: ""}
 }
 
-func (model *TodoItem) GetUserTodoItem(item TodoItem) helper.ReturnType {
-	// err := db.Select([]string{"content", ""})
+func (model *TodoItem) GetUserTodoItem(item TodoItem, QueryString string, CreatAt time.Time) helper.ReturnType {
 	type result struct {
 		TodoID      int       `gorm:"primaryKey;todo_id" json:"todo_id" uri:"todo_id"`
 		UserID      int       `gorm:"user_id" json:"user_id"`
@@ -67,7 +66,8 @@ func (model *TodoItem) GetUserTodoItem(item TodoItem) helper.ReturnType {
 	var todoList []result
 	err := db.
 		Model(&TodoItem{}).
-		Where("user_id = ?", item.UserID).
+		Where("create_at <= ?", CreatAt).
+		Where(QueryString).
 		Scan(&todoList).
 		Error
 	if err != nil {

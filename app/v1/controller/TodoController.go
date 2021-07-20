@@ -12,6 +12,29 @@ import (
 	"time"
 )
 
+func getQueryString(c *gin.Context, UserID int) string {
+	UserID = int(GetUserIdFromSession(c))
+	StringUserID := strconv.FormatInt(int64(UserID), 10)
+	QueryString := "user_id = " + StringUserID
+	Keyword, _ := c.GetQuery("keyword")
+	if Keyword != "" {
+		QueryString += " AND todo_title like '%" + Keyword + "%'"
+	}
+	TodoGroupID, _ := c.GetQuery("todo_group_id")
+	if TodoGroupID != "" {
+		QueryString += " AND todo_group_id = " + TodoGroupID
+	}
+	IsFinished, _ := c.GetQuery("is_finished")
+	if IsFinished != "" {
+		if IsFinished == "true" {
+			QueryString += " AND is_finished = 1"
+		} else {
+			QueryString += " AND is_finished = 0"
+		}
+	}
+	return QueryString
+}
+
 func AddTodo(c *gin.Context) {
 	todoModel := model.TodoItem{}
 	// todoValidte := validate.TodoValidate
@@ -49,26 +72,25 @@ func GetUsersTodoList(c *gin.Context) {
 	todoModel := model.TodoItem{}
 	//todoValidte := validate.TodoValidate
 	var todoJson model.TodoItem
-	log.Println(GetUserIdFromSession(c))
 	todoJson.UserID = int(GetUserIdFromSession(c))
+	log.Println(GetUserIdFromSession(c))
+	QueryString := getQueryString(c, todoJson.UserID)
+	log.Println(QueryString)
 
-	if todoJson.UserID == 0 {
-		c.JSON(http.StatusOK, helper.ApiReturn(constants.CodeError, "未登录，请先登录"))
-		return
+	var QueryTime = struct {
+		CreateAt time.Time `form:"create_at"`
+	}{}
+
+	if t, _ := c.GetQuery("create_at"); t != "" {
+		if err := c.ShouldBind(&QueryTime); err != nil {
+			c.JSON(http.StatusOK, helper.ApiReturn(http.StatusBadRequest, err.Error()))
+			return
+		}
+	} else {
+		QueryTime.CreateAt = time.Now()
 	}
 
-	//if err := c.ShouldBindJSON(&todoJson); err != nil {
-	//	c.JSON(http.StatusOK, helper.ApiReturn(constants.CodeError, "数据模型绑定失败", err.Error()))
-	//	return
-	//}
-
-	//todoMap := helper.Struct2Map(todoJson)
-	//if res, err := todoValidte.ValidateMap(todoMap, "get"); !res {
-	//	c.JSON(http.StatusOK, helper.ApiReturn(constants.CodeError, "输入信息不完整或有误", err.Error()))
-	//	return
-	//}
-
-	res := todoModel.GetUserTodoItem(todoJson)
+	res := todoModel.GetUserTodoItem(todoJson, QueryString, QueryTime.CreateAt)
 	c.JSON(http.StatusOK, gin.H{
 		"code":      200,
 		"msg":       "OK",
