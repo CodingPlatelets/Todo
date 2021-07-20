@@ -10,5 +10,6 @@ RUN go build Todo
 
 EXPOSE 5001
 
+
 CMD ["/build/Todo"]
 
